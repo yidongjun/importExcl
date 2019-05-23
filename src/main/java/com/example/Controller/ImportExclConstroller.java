@@ -55,7 +55,6 @@ public class ImportExclConstroller {
         int size = list.size();
         int remaining = size % threadCount;
         for (int i = 0; i < threadCount; i++) {
-            System.out.println("start=" + size / threadCount * i + "end" + size / threadCount * (i + 1));
             executors.execute(new ThreadSubList(size / threadCount * i, size / threadCount * (i + 1), list));
         }
 
