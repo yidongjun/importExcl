@@ -23,7 +23,9 @@ import java.util.concurrent.*;
 
 @RestController
 public class ImportExclConstroller {
-    private static  int threadCount =Runtime.getRuntime().availableProcessors() <<1;
+    private static  int threadCount =Runtime.getRuntime().availableProcessors() <<1 ;
+//    private static  int threadCount =1;
+
     @Autowired
     RedissonClient redissonClient;
     @Autowired
@@ -42,6 +44,8 @@ public class ImportExclConstroller {
     public String importExcl() throws IOException, InterruptedException, ExecutionException {
         RLock rLock = this.redissonClient.getLock("importLock");
         rLock.lock();
+
+        ThreadSubList.stopFlag =false;
         try{
         ExecutorService executors = Executors.newFixedThreadPool(threadCount);
         RBucket<Integer> importKey = redissonClient.getBucket("import");
@@ -63,11 +67,14 @@ public class ImportExclConstroller {
 
             System.out.println("redisket=" + importKey.get());
             if (importKey.get() > 0) {
+                System.out.println("运行耗时:"+ (System.currentTimeMillis()-time));
                 return importKey.get() + 1 + " 行有问题";
             } else {
+                System.out.println("运行耗时:"+ (System.currentTimeMillis()-time));
                 return RuntimeTest.mysqlImport();
             }
         }
+
     }finally {
             rLock.unlock();
         }
@@ -80,6 +87,7 @@ public class ImportExclConstroller {
 
     }
     public  static List<String>   readFile(String fileName) throws IOException {
+
         File f = new File(fileName);
         FileReader file = new FileReader(f);
         BufferedReader br = new BufferedReader(file);

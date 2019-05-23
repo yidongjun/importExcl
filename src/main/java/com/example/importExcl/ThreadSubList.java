@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 public class ThreadSubList implements Runnable {
+    public volatile static boolean stopFlag=false;
     private volatile int start;
     private volatile int end;
     private List<String> dataList;
@@ -53,15 +54,23 @@ public class ThreadSubList implements Runnable {
         RedissonClient redissonClient = SpringContextUtil.getBean(RedissonClient.class);
 
         RBucket<Integer > rBucket = redissonClient.getBucket("import");
+
             for (int i = start; i < end; i++) {
+//                5166
+                if(stopFlag){
+                    this.logger.info("return ..");
+                    return;
+                }
                 ItemExample itemExample = new ItemExample();
                 itemExample.createCriteria().andIdEqualTo(Long.parseLong(dataList.get(i)));
 
                 List<Item> list = itemDao.selectByExample(itemExample);
-                logger.info("size==="+list.size() +"id="+dataList.get(i));
+//                logger.info("size==="+list.size() +"id="+dataList.get(i));
                 if (list.size() > 0) {
+                    stopFlag=true;
                     logger.info("set key=" + list.get(0).getId() + "i==" + i);
                     rBucket.set(i);
+                    return;
                 }
             }
     }
