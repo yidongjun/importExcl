@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 @RestController
 public class ImportExclConstroller {
@@ -30,7 +31,6 @@ public class ImportExclConstroller {
     RedissonClient redissonClient;
     @Autowired
     ItemDao itemDao;
-
     @RequestMapping("/test")
     public String test() throws IOException {
         ItemDao itemDao = SpringContextUtil.getBean(ItemDao.class);
@@ -53,7 +53,7 @@ public class ImportExclConstroller {
         Long time = System.currentTimeMillis();
         List<String> list = readFile("C:\\slowsql\\item");
         int size = list.size();
-        int remaining = size % threadCount;
+        int remaining = size % threadCount; //余下的list。
         for (int i = 0; i < threadCount; i++) {
             executors.execute(new ThreadSubList(size / threadCount * i, size / threadCount * (i + 1), list));
         }
@@ -73,7 +73,6 @@ public class ImportExclConstroller {
                 return RuntimeTest.mysqlImport();
             }
         }
-
     }finally {
             rLock.unlock();
         }
